@@ -1,0 +1,55 @@
+{
+  "name": "dsh-update-guard",
+  "version": "0.1.0",
+  "description": "Hide the desktop \"new version\" button, and show the current/latest DSH release with the accumulated changelog between them.",
+  "type": "module",
+  "license": "MIT",
+  "author": "flareskyqq",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis-plugin",
+    "desktop-update",
+    "changelog",
+    "release-notes",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flareskyqq/dsh-update-guard.git"
+  },
+  "homepage": "https://github.com/flareskyqq/dsh-update-guard#readme",
+  "bugs": {
+    "url": "https://github.com/flareskyqq/dsh-update-guard/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./releases-snapshot.json": "./releases-snapshot.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "releases-snapshot.json",
+    "icon.svg",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  }
+}

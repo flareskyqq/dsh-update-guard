@@ -1,0 +1,19 @@
+# dsh-update-guard bundle patch.
+#
+# Inserts exactly one plugin row. The host half (exports ".") is a no-op;
+# everything lives in the browser half (exports "./client").
+#
+# The browser half does three additive things and nothing else:
+#   1. Adds a <style> tag that can hide the desktop "new version" button,
+#      driven by a localStorage-backed toggle set on the plugin settings page.
+#   2. Registers one "settings.section" card: the toggle, the current vs
+#      latest release, and the accumulated changelog between them.
+#   3. Fetches release metadata on demand only (never on a timer), with a
+#      bundled offline snapshot as the last fallback.
+#
+# It never downloads an installer, never calls quitAndInstall, never edits
+# app-update.yml, and never writes into $DSH_HOME. Uninstalling this bundle
+# (remove two lines from the profile package.json) restores the stock UI.
+- insert:
+    - id: update-guard
+      name: dsh-update-guard
