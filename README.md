@@ -66,9 +66,27 @@
 
 profile 的 `cordis.yml` 说明组合顺序是「每个 bundle 自带的 patch 依次叠加」。本插件自带 `cordis.patch.yml`（只有一行 `- insert`），会随 bundle 自动生效，所以**主 patch 文件一个字都不用动**。
 
-### 卸载
+### 卸载 / 一键回滚
 
-从 `package.json` 删掉那两行、删掉 `vendor/dsh-update-guard/` 目录、重启。所有隐藏标记在插件卸载钩子执行时也会被清掉。
+**手动卸载**：从 `package.json` 删掉那两行、删掉 `vendor/dsh-update-guard/` 目录、重启。所有隐藏标记在插件卸载钩子执行时也会被清掉。
+
+**一键回滚（推荐）**：安装时会在 profile 目录留下 `package.json.bak-pre-update-guard-<时间戳>` 备份。若担心重启后起不来，双击 `tools/rollback.cmd`（或在 `E:\dsh\` 下运行 `rollback-update-guard.ps1`）即可：
+
+- 用备份还原 `package.json`
+- 删掉 `node_modules/dsh-update-guard`
+- 清掉 `pnpm-lock.yaml` 里本插件的 3 个条目
+- 默认**保留** `vendor/dsh-update-guard` 源码（加 `-PurgeVendor` 才删）
+- 不联网、不依赖 pnpm、不杀 DSH 进程、可重复运行（已回滚会直接提示"无需操作"）
+- 每一步都留 `*.bak-before-rollback-<时间戳>` 二次备份
+
+> 就算不跑回滚脚本也**不会让 DSH 起不来**：宿主对 `dsh.profile.bundles` 里每个条目是逐个 `try/catch` 的，解析失败的 bundle 只会进 `skippedBundles`，其余插件照常加载（源码里 `profile manifest and user patch errors still throw` —— 只有那两类才致命）。回滚脚本只是把状态彻底还原干净。
+
+参数：
+
+```powershell
+.\rollback-update-guard.ps1 -Force          # 跳过确认提示
+.\rollback-update-guard.ps1 -PurgeVendor    # 连源码目录一起删
+```
 
 ---
 
