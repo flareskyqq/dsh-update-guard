@@ -1,6 +1,6 @@
 {
   "name": "dsh-update-guard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Hide the desktop \"new version\" button, and show the current/latest DSH release with the accumulated changelog between them.",
   "type": "module",
   "license": "MIT",

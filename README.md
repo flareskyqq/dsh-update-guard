@@ -146,15 +146,26 @@ npm publish --access public
 新版本发布后，重新抓取 Release 正文并内联进 `client.js`：
 
 ```bash
-node tools/build-snapshot.mjs   # 需要网络，重新生成 releases-snapshot.json
-node tools/inline-data.mjs      # 把快照 + locale 内联进 client.js
+GITHUB_TOKEN=$(gh auth token) node tools/build-snapshot.mjs  # 抓 Release 正文（认证可避免 60 次/小时限流）
+node tools/inline-data.mjs      # 把快照 + locale + 共享解析器内联进 client.js
+node tools/verify-runtime.mjs   # 回归测试（含「新版本不刷新」用例）
 node --check client.js          # 语法自检
-git add releases-snapshot.json client.js && git commit -m "chore: refresh release snapshot"
+git add . && git commit -m "chore: refresh release snapshot"
 ```
 
-只改了文案时，只跑 `node tools/inline-data.mjs` 即可。
+只改了文案时，只跑 `node tools/inline-data.mjs` 即可。**注意：日常使用不需要跑这些脚本**——插件在运行时会自己从 GitHub Releases 拉最新正文并合并，快照只是断网/限流时的兜底。
 
-`tools/build-snapshot.mjs` 的分组解析对齐 DSH Release 正文的四种标题（`新增功能 / 体验优化 / 问题修复 / 其他变更`），同时兼容 `<h3 id="...">新增功能</h3>` 和 `### 新增功能` 两种写法。解析不到的条目会落到「其他」，不丢内容。
+`tools/release-parser.js` 是唯一的正文解析器，同时供维护脚本和内联后的运行时代码使用，避免离线快照与线上数据分组不一致。它对齐 DSH 的四种标题（`新增功能 / 体验优化 / 问题修复 / 其他变更`），兼容 `<h3 id="...">新增功能</h3>` 和 `### 新增功能` 两种写法。
+
+### 运行时数据来源（v0.2.0 起）
+
+一次「刷新」会同时更新版本号和改动列表：
+
+1. 官方 nightly feed → 最新版本号（与宿主一致）
+2. GitHub Releases API → 每个版本的**正文**，用共享解析器分组
+3. 与内置快照按版本号合并（线上正文覆盖旧条目），排序后供改动列表和版本下拉框共用
+
+GitHub 限流 / 离线时，用 `localStorage` 里上次成功的正文缓存；再不行才回退到内置快照。设置页「数据来源」一行会标明正文是来自 GitHub、缓存还是快照。若 feed 领先于 GitHub（正文还没发），会补一个占位行，保证新版本至少出现在列表里。
 
 ---
 
@@ -170,10 +181,13 @@ dsh-update-guard/
 ├── locale/
 │   ├── zh.json
 │   └── en.json
-├── releases-snapshot.json    # 离线兜底：37 个版本的分组正文
+├── releases-snapshot.json    # 离线兜底：39 个版本的分组正文（含 0.2.2-rc.3）
 ├── tools/
+│   ├── release-parser.js     # 共享正文解析器（构建 + 运行时同一份）
 │   ├── build-snapshot.mjs    # 维护脚本：抓 GitHub Releases
-│   └── inline-data.mjs       # 维护脚本：内联数据到 client.js
+│   ├── inline-data.mjs       # 维护脚本：内联数据到 client.js
+│   ├── verify-runtime.mjs    # 回归测试：新版本刷新 / 缓存 / 覆盖
+│   └── rollback.*            # 一键回滚脚本
 ├── README.md
 ├── CHANGELOG.md
 ├── LICENSE
